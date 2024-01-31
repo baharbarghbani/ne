@@ -10,36 +10,42 @@ char *username;
 char *email;
 FILE *repo_list;
 
-int run_init(char const *argv[], int argc);
-int config(char const *argv[], int argc);
-int global_config(char const *argv[], int argc);
-int alias(char const* argv[], int argc);
-int global_alias(char const* argv[], int argc);
-int main(char const *argv[], int argc)
+int run_init(int argc, char const* argv[]);
+int config(int argc, char const* argv[]);
+int global_config(int argc, char const* argv[]);
+int alias(int argc, char const* argv[]);
+int global_alias(int argc, char const* argv[]);
+int main(int argc, char const* argv[])
 {
     if (argc < 2)
     {
         fprintf(stderr, "Invalid command: too few arguements\n");
         return 1;
     }
+    //checking the local .neogit first
+    //if it exists then the local alias.txt must be searches
+    //if it was, it should run
+    //if it wasn't, global alias text file must be searched
+    //if it was, it should run
+    //if it wasn't : error
     email = (char *)malloc(1000);
     username = (char *)malloc(1000);
     if (strcmp(argv[1], "init") == 0)
     {
         printf("yes");
-        return run_init(argv, argc);
+        return run_init(argc, argv);
     }
     else if ((strcmp(argv[1], "config") == 0) && (strcmp(argv[2], "--global") != 0))
     {
-        return config(argv, argc);
+        return config(argc, argv);
     }
     else if ((strcmp(argv[1], "config") == 0) && (strcmp(argv[2], "--global") == 0))
     {
-        return global_config(argv, argc);
+        return global_config(argc, argv);
     }
     else if ((strcmp(argv[1], "config") == 0 ) && (strstr(argv[2], "alias.") != NULL))
     {
-        return alias(argv, argc);
+        return alias(argc, argv);
     }
     else
     {
@@ -49,7 +55,7 @@ int main(char const *argv[], int argc)
 
     return 0;
 }
-int run_init(char const *argv[], int argc)
+int run_init(int argc, char const* argv[])
 {
     char cwd[2000];
     char tmp_cwd[2000];
@@ -89,7 +95,7 @@ int run_init(char const *argv[], int argc)
     } while (strcmp(tmp_cwd, "/") != 0);
     if (chdir(cwd) != 0)
         return 1;
-    repo_list = fopen("/mnt/c/c_proj/neogit/src/repolist.txt", "a");
+    repo_list = fopen("/home/asus/Documents/neogit/repolist.txt", "a");
     if (!exists)
     {
         if (mkdir(".neogit", 0755) != 0)
@@ -107,7 +113,7 @@ int run_init(char const *argv[], int argc)
 
     return 0;
 }
-int config(char const *argv[], int argc)
+int config(int argc, char const* argv[])
 {
     if (argc != 4)
     {
@@ -223,7 +229,7 @@ int config(char const *argv[], int argc)
     free(address);
     return 0;
 }
-int global_config(char const *argv[], int argc)
+int global_config(int argc, char const* argv[])
 {
     if (argc != 5)
     {
@@ -235,13 +241,13 @@ int global_config(char const *argv[], int argc)
         fprintf(stderr, "Invalid global config command\n");
         return 1;
     }
-    char *address = "/mnt/c/c_proj/neogit/src";
+    char *address = "/home/asus/Documents/neogit/";
     chdir(address);
     DIR *dir = opendir(".");
     struct dirent *entry;
     bool exists = false;
     char *cwd = (char *)malloc(2000);
-    repo_list = fopen("/mnt/c/c_proj/neogit/src/repolist.txt", "r");
+    repo_list = fopen("/home/asus/Documents/neogit/repolist.txt", "r");
     char* repo = (char*)malloc(2000);
     while ((entry = readdir(dir)) != NULL)
     {
@@ -323,7 +329,7 @@ int global_config(char const *argv[], int argc)
     fclose(repo_list);
     return 0;
 }
-int alias(char const* argv[], int argc)
+int alias(int argc, char const* argv[])
 {
     if(argc != 4)
     {
@@ -397,7 +403,7 @@ int alias(char const* argv[], int argc)
     strcpy(command, argv[3]);
     command = command + strlen("neogit") + 1;
     char* tmp = (char*)malloc(2000);
-    FILE* commands = fopen("/mnt/c/c_proj/neogit/src/commands.txt", "r");
+    FILE* commands = fopen("/home/asus/Documents/neogit/commands.txt", "r");
     if(commands == NULL)
     {
         fprintf(stderr, "Error occured in opeening commands file\n");
@@ -429,23 +435,52 @@ int alias(char const* argv[], int argc)
     free(tmp_cwd);
     return 0;
 }
-int global_alias(char const* argv[], int argc)
+int global_alias(int argc, char const* argv[])
 {
     if(argc != 5)
     {
         fprintf(stderr, "Wrong number of arguements in alias global\n");
         return 0;
     }
-    FILE *global = fopen("/mnt/c/c_proj/neogti/src/alias_global.txt", "a");  //
+    FILE *global = fopen("/home/asus/Documents/neogit/alias_global.txt", "a");
+    if(global == NULL)
+    {
+        fprintf(stderr, "Error in global alias\n");
+        return 1;
+    }
     char* lines = (char*)malloc(2000);
-    FILE* source = fopen("/mnt/c/c_proj/neogit/src/commands.txt", "r");
+    FILE* commands = fopen("/home/asus/Documents/neogit/commands.txt", "r");
+    if(commands == NULL)
+    {
+        fprintf(stderr, "Error in global alias\n");
+        return 1;
+    }
+    char* name = (char*)malloc(2000);
+    char* command = (char*)malloc(2000);
+    sscanf(argv[3], "alias.%s", name);
+    strcpy(command, argv[4]);
+    command = command + strlen("neogit") + 1;
+    bool exists = false;
+    while(fgets(lines, 1000, commands) != NULL)
+    {
+        if(strcmp(command, lines) == 0)
+        {
+            exists = true;
+            break;
+        }
+    }
+    char* address = (char*)malloc(2000);
+    if(exists)
+    {
+        fprintf(global, "%s  %s", name, command);
+    }
+    else{
+        fprintf(stderr, "The given command in not a neogit command\n");
+        return 1;
+    }
 
-    
-
-
-
-
-
+    fclose(global);
+    fclose(commands);
     free(lines);
     return 0;
 }
