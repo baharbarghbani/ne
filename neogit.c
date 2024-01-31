@@ -31,6 +31,39 @@ int main(int argc, char const* argv[])
     email = (char *)malloc(1000);
     username = (char *)malloc(1000);
     if (strcmp(argv[1], "init") == 0)
+    {#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+char *username;
+char *email;
+FILE *repo_list;
+
+int run_init(int argc, char const* argv[]);
+int config(int argc, char const* argv[]);
+int global_config(int argc, char const* argv[]);
+int alias(int argc, char const* argv[]);
+int global_alias(int argc, char const* argv[]);
+int main(int argc, char const* argv[])
+{
+    if (argc < 2)
+    {
+        fprintf(stderr, "Invalid command: too few arguements\n");
+        return 1;
+    }
+    //checking the local .neogit first
+    //if it exists then the local alias.txt must be searches
+    //if it was, it should run
+    //if it wasn't, global alias text file must be searched
+    //if it was, it should run
+    //if it wasn't : error
+    email = (char *)malloc(1000);
+    username = (char *)malloc(1000);
+    if (strcmp(argv[1], "init") == 0)
     {
         printf("yes");
         return run_init(argc, argv);
@@ -483,4 +516,6 @@ int global_alias(int argc, char const* argv[])
     fclose(commands);
     free(lines);
     return 0;
+
 }
+        
